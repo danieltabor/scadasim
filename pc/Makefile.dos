@@ -1,0 +1,70 @@
+CC=gcc
+AR=ar rvs
+CFLAGS=-Os -DMODBUS
+LDFLAGS= -lm 
+SRC=src\\
+DSTDIR=obj
+DST=$(DSTDIR)\\
+SIMLIB=$(DST)libsim.a
+EXE=sim.exe
+
+$(EXE): $(DST)main.o $(DST)cli.o $(DST)expr.o $(DST)var.o $(DST)command.o $(DST)parse.o $(DST)modbus.o $(DST)pointvar.o $(DST)compat.o $(DST)table.o $(DST)display.o $(DST)serial.o
+	$(CC) -o $(EXE) $(DST)main.o $(SIMLIB) $(LDFLAGS)
+
+clean:
+	del $(DST)*.o
+	del $(SIMLIB)
+	
+distclean: clean
+	del $(EXE)
+	del $(DST)*
+	rmdir -f $(DSTDIR) 
+
+$(DST)main.o: $(SRC)main.c $(SRC)cli.h $(SRC)expr.h
+	mkdir -f $(DSTDIR)
+	$(CC) $(CFLAGS) -o $(DST)main.o -c $(SRC)main.c
+
+$(DST)cli.o: $(SRC)cli.c $(SRC)cli.h $(SRC)var.h $(SRC)val.h $(SRC)table.h
+	$(CC) $(CFLAGS) -o $@ -c $(SRC)cli.c
+	$(AR) $(SIMLIB) $@
+
+$(DST)expr.o: $(SRC)expr.c $(SRC)expr.h $(SRC)var.h $(SRC)val.h $(SRC)parse.h $(SRC)compat.h $(SRC)table.h
+	$(CC) $(CFLAGS) -o $@ -c $(SRC)expr.c
+	$(AR) $(SIMLIB) $@
+
+$(DST)var.o: $(SRC)var.c $(SRC)var.h $(SRC)val.h $(SRC)compat.h $(SRC)parse.h $(SRC)expr.h $(SRC)cli.h $(SRC)table.h
+	$(CC) $(CFLAGS) -o $@ -c $(SRC)var.c
+	$(AR) $(SIMLIB) $@
+
+$(DST)command.o: $(SRC)command.c $(SRC)command.h $(SRC)var.h $(SRC)val.h $(SRC)parse.h $(SRC)expr.h $(SRC)table.h $(SRC)cli.h $(SRC)modbus.h $(SRC)display.h
+	$(CC) $(CFLAGS) -o $@ -c $(SRC)command.c
+	$(AR) $(SIMLIB) $@
+	
+$(DST)parse.o: $(SRC)parse.c $(SRC)parse.h
+	$(CC) $(CFLAGS) -o $@ -c $(SRC)parse.c
+	$(AR) $(SIMLIB) $@
+
+$(DST)modbus.o: $(SRC)modbus.c $(SRC)modbus.h $(SRC)compat.h $(SRC)pointvar.h
+	$(CC) $(CFLAGS) -o $@ -c $(SRC)modbus.c
+	$(AR) $(SIMLIB) $@
+
+$(DST)pointvar.o: $(SRC)pointvar.c $(SRC)pointvar.h $(SRC)var.h $(SRC)val.h
+	$(CC) $(CFLAGS) -o $@ -c $(SRC)pointvar.c
+	$(AR) $(SIMLIB) $@
+
+$(DST)compat.o: $(SRC)compat.c $(SRC)compat.h $(SRC)dos\\serial.h
+	$(CC) $(CFLAGS) -o $@ -c $(SRC)compat.c
+	$(AR) $(SIMLIB) $@
+	
+$(DST)table.o: $(SRC)table.c $(SRC)table.h
+	$(CC) $(CFLAGS) -o $@ -c $(SRC)table.c
+	$(AR) $(SIMLIB) $@
+	
+$(DST)display.o: $(SRC)display.c $(SRC)display.h $(SRC)cli.h
+	$(CC) $(CFLAGS) -o $@ -c $(SRC)display.c
+	$(AR) $(SIMLIB) $@
+
+$(DST)serial.o: $(SRC)dos\\serial.c $(SRC)dos\\serial.h
+	$(CC) $(CFLAGS) -o $@ -c $(SRC)dos\\serial.c
+	$(AR) $(SIMLIB) $@
+

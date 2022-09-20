@@ -1,0 +1,104 @@
+Console Syntax
+===========================================================
+The core purpose of the console is defining variables.  To
+define a varable use the following syntax:
+
+[variable name] [= expression] [: modbus config] 
+
+Both the expressiong and modbus config are optional, but
+one or the other must be supplied.  If both are suppiled,
+they can be given in either order.  If the mathmatical
+expression references an undefined variable, the variable
+will be create, with a value of zero.  Variables that start
+with an underscore will not be displayed on the LCD.
+
+Modbus config takes the form of:
+: do [address]
+: di [address]
+: ao [address]
+: ao scaled [address] [min] [max]
+: ai [address]
+: ai scaled [address] [min] [max]
+
+The mathmatical expression can contain values which are either 
+floats or ints.  The values will be dynamically cast depending 
+upon the context of their use.  In most cases if a float is input
+to an operation, then the result will be a float.
+
+Mathmatically expressions support the following operators (shown 
+in order of tiered precedence):
+
+- !   (negation, both arithmatic and logical)
+* / // % (multiply, divide, floor divide, modulo.  Floor divide will
+       perform normal division, but return an int.  Modulo will convert 
+       to ints before performing operation)
++ -   (add and subtract)
+<< >>  (bit shifting, converts floats in ints before shifting)
+== != < <= > >= (comparisons, results in int 1 or 0)
+| ^ & (bitwise operations, converts to ints before operation)
+|| && (logical AND, results in int 1 or 0)
+
+
+Mathmatically expressions are include the following hardcoded
+variables:
+
+t  = number of simulation ticks/steps
+ms = number of milliseconds since the microcontroller reset
+pi = PI
+
+Mathmatically expressions can also include the following functions:
+
+if( condition, then expression [, else expression])
+abs( number )         - returns the type of the argument
+int( number )         - returns an int
+float( number )       - returns a float
+sin( number )         - returns a float
+pow( base, exponent ) - returns a float
+ceil( number )        - if number is a float returns a ceilling float, otherwise 
+                        returns the int argument.
+floor( number )       - if number is a float returns a floor float, othersie returns 
+                        the int argument.
+rand( min, max )      - returns a random number between min and max (exclusive).  Min 
+                        and max will be interpreted as ints.
+round( number )       - if number is a float returns a rounded float, otherwise 
+                        returns the int argument.
+series( arg1 [,args2] [,arg3] ...) - returns the arguments in round robin fashion.
+
+
+Other console commands:
+-----------------------
+new                   - creates a new configuration
+list                  - displays the current configuration
+state                 - displays the current state of all variables
+undef                 - undefines a variable (variables will be dynamically 
+                        redefined if they are still referenced by expressions)
+modbus [address]      - sets the modbus RTU address
+modbustcp port        - Start modbus TCP server on specified TCP/IP port
+iec61850 [name] [port] - Start the IEC61850 server using the currently specified points
+gsed [Eth] [appid] [dst MAC] - Start IEC61850 GOOSE publishing of digital points (must appear after iec61850 command)
+gsea [Eth] [appid] [dst MAC] - Start IEC61850 GOOSE publishing of analog points (must appear after iec61850 command)
+icd [icd path]        - Export ICD file
+scd [scd path]        - Export SCD file (ICD file with communication section)
+?[expression]         - provides a method of immediately solving an expression without 
+                        assigning its result to a variable
+
+Additional (non-microcontroller) console commands:
+--------------------------------------------------
+exit  - quit simulator
+save [filename] - save the simulation
+load [filename] - load a previously saved simulation
+gfx [filename]  - load an ANSI/ASCII graphics template
+run  - start showing the gfx template
+stop - stop showing the gfx template
+
+
+Notes and limits:
+-----------------
+The simulation will attempt to tick (solve all expressions) every 500 ms, however if
+processing time runs long, this may be slower and will occur as quickly as possible.
+
+The following hardcoded size limits exist:
+100 total variables
+1KB of space reserved for varaible names
+5KB of space reserved for all mathmatical expressions
+

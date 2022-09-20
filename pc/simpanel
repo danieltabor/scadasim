@@ -1,0 +1,36 @@
+Example configuration:
+ISO1=1 :do 1
+ISO2=0 :do 2
+BRK3=1 :do 3
+BRK4=1 :do 4
+ISO5=0 :do 5
+ISO6=1 :do 6
+BRK7=1 :do 7
+ISO8=0 :do 8
+BB1V = rand(0xFFF0,0xFFFF) : ai 1
+BB2V = rand(0xFFF0,0xFFFF) : ai 2
+LOAD1 = rand(0x0080,0x00FF)
+LOAD2 = rand(0x0080,0x00FF)
+LOAD3 = rand(0x0080,0x00FF)
+LOAD4 = rand(0x0080,0x00FF)
+_left_LOAD = if( BRK4, LOAD1 + LOAD2, LOAD2 )
+_right_LOAD = LOAD3 + LOAD4
+_total_LOAD = _left_LOAD + _right_LOAD
+_left_path = BRK3 && (ISO1 || ISO2)
+_right_path = BRK7 && (ISO5 || ISO6)
+BRK3V = if( BRK3, if( ISO1 && ISO2, if( BB1V > BB2V, BB1V, BB2V), if( ISO1, BB1V, if( ISO2, BB2V) ))) : ai 3
+BRK3I = if( _left_path, if( ISO8, if( _right_path, _total_LOAD/2, _total_LOAD), _left_LOAD ) ): ai 4
+BRK7V = if( BRK7, if( ISO5 && ISO6, if( BB1V > BB2V, BB1V, BB2V), if( ISO5, BB1V, if( ISO6, BB2V) ))) : ai 5
+BRK7I = if( _right_path, if( ISO8, if( _left_path, _total_LOAD/2, _total_LOAD), _right_LOAD ) ) : ai 6
+BB3V = if( ISO8, if( BRK3V > BRK7V, BRK3V, BRK7V ), BRK3V ) : ai 7
+BB4V = if( ISO8, if( BRK3V > BRK7V, BRK3V, BRK7V ), BRK7V ) : ai 8
+#modbus 101
+#modbustcp 502
+iec61850 simpanel 102
+gsed enp0s31f6 1000 01:0c:cd:01:00:00
+gsea enp0s31f6 1001 01:0c:cd:01:00:00
+icd simpanel.icd
+scd simpanel.scd
+gfx simpanel.utf8
+run
+

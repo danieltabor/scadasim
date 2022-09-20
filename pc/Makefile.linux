@@ -1,0 +1,83 @@
+CC=gcc
+CFLAGS=-Os -DLINUX -DMODBUS -DMODBUSTCP -DIEC61850
+LDFLAGS=-lm -lncurses -pthread -L$(DST)/libiec61850-1.5.1/build -liec61850
+STATIC_LDFLAGS=-static -lm -lncurses -ltinfo -pthread -L$(DST)/libiec61850-1.5.1/build -liec61850
+SRC=src/
+DST=obj/
+DSTUC=OBJ/
+EXE=sim
+LIBIEC61850A=$(DST)libiec61850-1.5.1/build/libiec61850.a
+IEC61850SRC=$(DST)libiec61850-1.5.1/src/
+LIBFLAGS=-I$(IEC61850SRC)iec61850/inc -I$(IEC61850SRC)mms/inc -I$(IEC61850SRC)common/inc -I$(DST)libiec61850-1.5.1/hal/inc -I$(IEC61850SRC)logging -I$(IEC61850SRC)goose
+
+help:
+	@echo "make [target]"
+	@echo ""
+	@echo "Available targets:"
+	@echo "  dynamic    Dynamically linked build"
+	@echo "  static     Statically linked build"
+	@echo "  clean      Remove object files, but not executable"
+	@echo "  distclean  Remove all build artifacts"
+	@echo "  help       Prints this message"
+
+dynamic: $(DST) $(DST)main.o $(DST)cli.o $(DST)expr.o $(DST)var.o $(DST)command.o $(DST)parse.o $(DST)compat.o $(DST)table.o $(DST)display.o $(DST)pointvar.o $(DST)modbus.o $(DST)modbustcp.o $(DST)iec61850.o
+	$(CC) -o $(EXE) $(DST)main.o $(DST)cli.o $(DST)expr.o $(DST)var.o $(DST)command.o $(DST)parse.o $(DST)compat.o $(DST)table.o $(DST)display.o $(DST)pointvar.o $(DST)modbus.o $(DST)modbustcp.o $(DST)iec61850.o $(LDFLAGS)
+
+static: $(DST) $(DST)main.o $(DST)cli.o $(DST)expr.o $(DST)var.o $(DST)command.o $(DST)parse.o $(DST)compat.o $(DST)table.o $(DST)display.o $(DST)pointvar.o $(DST)modbus.o $(DST)modbustcp.o $(DST)iec61850.o
+	$(CC) -o $(EXE) $(DST)main.o $(DST)cli.o $(DST)expr.o $(DST)var.o $(DST)command.o $(DST)parse.o $(DST)compat.o $(DST)table.o $(DST)display.o $(DST)pointvar.o $(DST)modbus.o $(DST)modbustcp.o $(DST)iec61850.o $(STATIC_LDFLAGS)
+
+clean:
+	rm -rf $(DST)*.o
+	rm -rf $(DSTUC)*.O
+	rm -rf $(DSTUC)*.A
+
+distclean:
+	rm -rf $(DST)
+	rm -rf $(DSTUC)
+	rm -rf $(EXE)
+
+$(DST):
+	mkdir -p $(DST) 
+
+$(DST)main.o: $(SRC)main.c $(SRC)cli.h $(SRC)expr.h
+	$(CC) $(CFLAGS) -o $@ -c $(SRC)main.c
+
+$(DST)cli.o: $(SRC)cli.c $(SRC)cli.h $(SRC)var.h $(SRC)val.h $(SRC)table.h
+	$(CC) $(CFLAGS) -o $@ -c $(SRC)cli.c
+
+$(DST)expr.o: $(SRC)expr.c $(SRC)expr.h $(SRC)var.h $(SRC)val.h $(SRC)parse.h $(SRC)compat.h $(SRC)table.h
+	$(CC) $(CFLAGS) -o $@ -c $(SRC)expr.c
+
+$(DST)var.o: $(SRC)var.c $(SRC)var.h $(SRC)val.h $(SRC)compat.h $(SRC)parse.h $(SRC)expr.h $(SRC)cli.h $(SRC)table.h
+	$(CC) $(CFLAGS) -o $@ -c $(SRC)var.c
+
+$(DST)command.o: $(SRC)command.c $(SRC)command.h $(SRC)var.h $(SRC)val.h $(SRC)parse.h $(SRC)expr.h $(SRC)table.h $(SRC)cli.h $(SRC)display.h $(SRC)iec61850.h
+	$(CC) $(CFLAGS) -o $@ -c $(SRC)command.c
+	
+$(DST)parse.o: $(SRC)parse.c $(SRC)parse.h
+	$(CC) $(CFLAGS) -o $@ -c $(SRC)parse.c
+
+$(DST)compat.o: $(SRC)compat.c $(SRC)compat.h
+	$(CC) $(CFLAGS) -o $@ -c $(SRC)compat.c
+	
+$(DST)table.o: $(SRC)table.c $(SRC)table.h
+	$(CC) $(CFLAGS) -o $@ -c $(SRC)table.c
+	
+$(DST)display.o: $(SRC)display.c $(SRC)display.h $(SRC)cli.h
+	$(CC) $(CFLAGS) -o $@ -c $(SRC)display.c
+
+$(DST)pointvar.o: $(SRC)pointvar.c $(SRC)pointvar.h $(SRC)var.h $(SRC)val.h
+	$(CC) $(CFLAGS) -o $@ -c $(SRC)pointvar.c
+
+$(DST)modbus.o: $(SRC)modbus.c $(SRC)modbus.h $(SRC)compat.h $(SRC)pointvar.h
+	$(CC) $(CFLAGS) -o $@ -c $(SRC)modbus.c
+
+$(DST)modbustcp.o: $(SRC)modbustcp.c $(SRC)modbustcp.h $(SRC)compat.h $(SRC)pointvar.h
+	$(CC) $(CFLAGS) -o $@ -c $(SRC)modbustcp.c
+
+$(DST)iec61850.o: $(LIBIEC61850A) $(SRC)iec61850.c
+	$(CC) $(CFLAGS) $(LIBFLAGS) -o $@ -c $(SRC)iec61850.c
+
+$(LIBIEC61850A):
+	unzip -qo ../support/iec61850/libiec61850-1.5.1.zip -d $(DST)
+	$(MAKE) -C $(DST)libiec61850-1.5.1
